@@ -9,28 +9,26 @@ const INTERVAL = 16; // ms
 const Cyberpunk = () => {
   const [scale, setScale] = useState(MIN_SCALE);
   const [growing, setGrowing] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Handle growing/shrinking
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    if (growing) {
-      intervalRef.current = setInterval(() => {
-        setScale(prev => {
+    intervalRef.current = setInterval(() => {
+      setScale(prev => {
+        if (growing) {
           const next = prev + GROW_STEP;
           if (next > MAX_SCALE) return MIN_SCALE; // reset if too big
           return next;
-        });
-      }, INTERVAL);
-    } else if (scale > MIN_SCALE) {
-      intervalRef.current = setInterval(() => {
-        setScale(prev => Math.max(MIN_SCALE, prev - SHRINK_STEP));
-      }, INTERVAL);
-    }
+        }
+        return Math.max(MIN_SCALE, prev - SHRINK_STEP);
+      });
+    }, INTERVAL);
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [growing, scale]);
+  }, [growing]);
 
   // Keyboard support
   useEffect(() => {
